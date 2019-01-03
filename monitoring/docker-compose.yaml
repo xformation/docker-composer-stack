@@ -10,6 +10,7 @@ services:
       - POSTGRES_PASSWORD=postgres        
   grafana:
     image: grafana/grafana
+    user: "root"
     depends_on:
       - prometheus
     ports:
