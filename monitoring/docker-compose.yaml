@@ -90,6 +90,8 @@ services:
     restart: always
     deploy:
       mode: global
+    cap_add:
+      - ALL
 
   alertmanager:
     image: prom/alertmanager
