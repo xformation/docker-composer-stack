@@ -1,4 +1,8 @@
 # my global config
+remote_write:
+- url: "http://influxdb:8086/api/v1/prom/write?db=prometheus"
+remote_read:
+- url: "http://influxdb:8086/api/v1/prom/read?db=prometheus"
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # By default, scrape targets every 15 seconds.
@@ -63,4 +67,18 @@ scrape_configs:
     #   port: 9100
     
     static_configs:
-          - targets: ['node-exporter:9100']
+          - targets: ['node-exporter:9100','10.10.10.77:9100','10.10.10.95:9100','10.10.10.54:9100','100.64.3.26:9100','100.64.3.25:9100','100.64.3.56:9100','10.10.10.56:9100']
+
+  - job_name: 'win-exporter'
+
+    scrape_interval: 5s
+
+    static_configs:
+          - targets: ['193.168.5.215:9182','193.168.5.207:9182','193.168.5.168:9182','193.168.5.161:9182','100.64.3.81:9182','193.168.5.171']
+
+#  - job_name: 'node'
+    
+#    scrape_ineterval: 5s
+  
+#    static_config:
+#          - targets: ['10.10.10.77:9100']

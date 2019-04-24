@@ -7,7 +7,7 @@ services:
         source: dbdata
         target: /var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=postgres        
+      - POSTGRES_PASSWORD=postgres
   synectiks-monitoring:
     image: papu/synectiks-monitoring
     user: "root"
@@ -16,8 +16,13 @@ services:
       - influxdb
     ports:
       - "3000:3000"
-    network_mode: "host"
+    networks:
+      - back-tier
+      - front-tier
     restart: "always"
+    links:
+      - influxdb:influxdb
+      - prometheus:prometheus
     volumes:
       - type: volume
         source: ./grafana/data
@@ -32,26 +37,21 @@ services:
     user: "root"
     ports:
       - "8086:8086"
-    network_mode: "host"
+    networks:
+      - back-tier
     restart: "always"
     volumes:
       - type: volume
         source: ./influx/data
         target: /var/lib/influxdb
-  telegraf:
-    container_name: telegraf
-    image: telegraf:1.9.4-alpine
-    network_mode: "host"
-    volumes:
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
   prometheus:
     image: prom/prometheus:latest
     user: "root"
     volumes:
       - ./prometheus/:/etc/prometheus/
       - ./prometheus/data:/prometheus
+    depends_on:
+      - influxdb
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -60,17 +60,24 @@ services:
     ports:
       - 9090:9090
     links:
+      - influxdb:influxdb
+      - node-exporter:node-exporter
       - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
     networks:
       - back-tier
     restart: always
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.hostname == ${HOSTNAME}
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:1.9.4-alpine
+    networks:
+      - back-tier
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+    links:
+      - influxdb:influxdb
+    restart: always
 
   node-exporter:
     image: prom/node-exporter
@@ -78,8 +85,8 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
-    command: 
-      - '--path.procfs=/host/proc' 
+    command:
+      - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
@@ -92,7 +99,6 @@ services:
       mode: global
     cap_add:
       - ALL
-
   alertmanager:
     image: prom/alertmanager
     ports:
@@ -105,10 +111,6 @@ services:
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.hostname == ${HOSTNAME}
   cadvisor:
     image: google/cadvisor
     volumes:
@@ -125,9 +127,10 @@ services:
       mode: global
 
 volumes:
-  dbdata:
+  dbdata: {}
   prometheus_data: {}
   grafana_data: {}
+
 networks:
-  front-tier:
   back-tier:
+  front-tier:
