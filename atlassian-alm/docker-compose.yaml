@@ -30,7 +30,7 @@ services:
         source: confluence_home
         target: /opt/confluence-home
     environment:
-      - DB_HOST=postgres
+      - DB_HOST=database
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_JDBC_URL=jdbc:postgresql://database:5432     
