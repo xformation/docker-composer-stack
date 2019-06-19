@@ -13,6 +13,8 @@ services:
   nginx:
     build: ./nginx
     user: "root"
+    links:
+      - confluence
     depends_on:
       - confluence
     ports:
