@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3.7"
 services:
   database:
     image: postgres:9.4
@@ -6,8 +6,8 @@ services:
       - type: volume
         source: alp-dbdata
         target: /var/lib/postgresql/data
-      - confluence/setup-confluence-db.sh:/docker-entrypoint-initdb.d/setup-confluence-db.sh
-      - tmp:/tmp/dumps
+      - "confluence/setup-confluence-db.sh:/docker-entrypoint-initdb.d/setup-confluence-db.sh"
+      - "tmp:/tmp/dumps"
     environment:
       - POSTGRES_PASSWORD=postgres            
   nginx:
