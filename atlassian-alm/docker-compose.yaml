@@ -20,7 +20,11 @@ services:
       - "443:443"
     restart: "always"
   confluence:
-    build: ./confluence
+    build:
+      context: ./confluence
+      dockerfile: Dockerfile
+      args:
+        buildno: 1
     depends_on:
       - database
     links:
