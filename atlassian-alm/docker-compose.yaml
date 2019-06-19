@@ -6,134 +6,34 @@ services:
       - type: volume
         source: alp-dbdata
         target: /var/lib/postgresql/data
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
-      - atlassian-confluence/setup-confluence-db.sh:/docker-entrypoint-initdb.d/setup-confluence-db.sh
-      - atlassian-crowd/setup-crowd-db.sh:/docker-entrypoint-initdb.d/setup-crowd-db.sh
-      - atlassian-jira/setup-jira-db.sh:/docker-entrypoint-initdb.d/setup-jira-db.sh
-      - atlassian-stash/setup-stash-db.sh:/docker-entrypoint-initdb.d/setup-stash-db.sh
-      - atlassian-bamboo/setup-bamboo-db.sh:/docker-entrypoint-initdb.d/setup-bamboo-db.sh
+      - confluence/setup-confluence-db.sh:/docker-entrypoint-initdb.d/setup-confluence-db.sh
       - tmp:/tmp/dumps
     environment:
-      - POSTGRES_PASSWORD=postgres   
-         
-  grafana:
-    image: grafana/grafana
+      - POSTGRES_PASSWORD=postgres            
+  nginx:
+    build: ./nginx
     user: "root"
     depends_on:
-      - prometheus
+      - confluence
     ports:
-      - "3000:3000"
-    networks:
-      - back-tier
-      - front-tier
+      - "80:80"
+      - "443:443"
     restart: "always"
-    volumes:
-      - type: volume
-        source: ./grafana/data
-        target: /var/lib/grafana
-      - type: volume
-        source: ./grafana/provisioning
-        target: /etc/grafana/provisioning/
-    env_file:
-      - ./grafana/conf/config.monitoring
-  influxdb:
-    image: influxdb
-    user: "root"
-    ports:
-      - "8086:8086"
-    restart: "always"
-    volumes:
-      - type: volume
-        source: ./influx/data
-        target: /var/lib/influxdb
-  telegraf:
-    container_name: telegraf
-    image: telegraf:latest
-    network_mode: "host"
-    volumes:
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
-  prometheus:
-    image: prom/prometheus:latest
-    user: "root"
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - ./prometheus/data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9090:9090
+  confluence:
+    build: ./confluence
+    depends_on:
+      - database
     links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
-    networks:
-      - back-tier
-    restart: always
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.hostname == ${HOSTNAME}
-
-  node-exporter:
-    image: prom/node-exporter
+      - database
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command: 
-      - '--path.procfs=/host/proc' 
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    ports:
-      - 9100:9100
-    networks:
-      - back-tier
-    restart: always
-    deploy:
-      mode: global
-
-  alertmanager:
-    image: prom/alertmanager
-    ports:
-      - 9093:9093
-    volumes:
-      - ./alertmanager/:/etc/alertmanager/
-    networks:
-      - back-tier
-    restart: always
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.hostname == ${HOSTNAME}
-  cadvisor:
-    image: google/cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - 8080:8080
-    networks:
-      - back-tier
-    restart: always
-    deploy:
-      mode: global
-
+      - type: volume
+        source: confluence_home
+        target: /opt/confluence-home
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_JDBC_URL=jdbc:postgresql://database:5432     
 volumes:
   alp-dbdata:
-  prometheus_data: {}
-  grafana_data: {}
-networks:
-  alp-front-tier:
-  alp-back-tier:
+  confluence_home: {}
