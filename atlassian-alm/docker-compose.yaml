@@ -31,6 +31,8 @@ services:
       - database
     links:
       - database
+    ports:
+      - "8090:8090"
     volumes:
       - type: volume
         source: confluence_home

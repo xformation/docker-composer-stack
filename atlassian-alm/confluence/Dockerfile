@@ -20,12 +20,17 @@ ADD jars/atlassian-universal-plugin-manager-plugin-2.18.4.jar atlassian-universa
 RUN cp -v atlassian-universal-plugin-manager-plugin-2.18.4.jar /opt/confluence/confluence/WEB-INF/atlassian-bundled-plugins/ && \
     cp -v atlassian-extras-decoder-v2-3.2.jar /opt/confluence/confluence/WEB-INF/lib/
 ADD postgresql-42.2.2.jar /opt/confluence/lib/postgresql-42.2.2.jar
-ADD setup-confluence-db.sh /opt/confluence/setup-confluence-db.sh
-RUN chmod u+x /opt/confluence/setup-confluence-db.sh
+ADD setup-confluence-db.sh /setup-confluence-db.sh
+RUN chmod u+x /setup-confluence-db.sh
 ADD launch.sh /launch
 RUN chmod u+x /launch
 ADD data.sql /data.sql
-RUN adduser -D confluence
+RUN useradd -ms /bin/bash  confluence
+RUN usermod -a -G confluence  confluence
+RUN chown confluence:confluence /setup-confluence-db.sh
+RUN chown confluence:confluence /launch
+RUN chown  -R confluence:confluence /opt/confluence
+RUN chown  -R confluence:confluence /opt/confluence-home
 USER confluence
 WORKDIR /opt/confluence
 VOLUME ["/opt/confluence-home"]
