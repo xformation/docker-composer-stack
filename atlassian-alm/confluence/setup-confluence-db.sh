@@ -2,7 +2,7 @@
 echo "******CREATING CONFLUENCE DATABASE******"
 PGPASSWORD=postgres psql -h ${DB_HOST} -p 5432 --username postgres <<- EOSQL
    CREATE USER confluence WITH PASSWORD 'confluence';
-   CREATE DATABASE confluence WITH ENCODING 'UNICODE' LC_COLLATE 'C' LC_CTYPE 'C' \
+   CREATE DATABASE confluence WITH ENCODING 'UTF8' LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' \
        TEMPLATE template0;
    GRANT ALL PRIVILEGES ON DATABASE confluence to confluence;
 EOSQL

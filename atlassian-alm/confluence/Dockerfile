@@ -1,6 +1,6 @@
 FROM relateiq/oracle-java8
 
-ENV CONFLUENCE_VERSION 5.8.6
+ENV CONFLUENCE_VERSION 6.14.2
 ENV CONFLUENCE_HOME /opt/confluence-home
 ENV HOME /opt/confluence-home
 RUN apt-get update && apt-get install -y postgresql-client postgresql-contrib
